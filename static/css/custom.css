@@ -1,0 +1,27 @@
+/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+  padding-top: 80px;
+  padding-bottom: 20px;
+}
+
+.bg-info {
+  padding: 3px;
+}
+
+.log-linenumber {
+  font-family: monospace;
+  white-space: pre-wrap;
+  cursor: pointer;
+}
+
+.log-linenumber:hover {
+  color: #333;
+}
+
+.log-time {
+  font-family: monospace;
+}
+
+.log-message {
+  white-space: pre-wrap;
+}
