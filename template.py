@@ -154,6 +154,8 @@ users_title = u'Пользователи'
 
 users = u'''    <div class="container">
       <p>Всего пользователей: {0}</p>
+      <p>Всего сообщений: {1}</p>
+      <br>
       <h4>ТОП-100 наиболее активных пользователей:</h4>
       <div class="row">
         <div class="col-md-6">
@@ -166,7 +168,7 @@ users = u'''    <div class="container">
               </tr>
             </thead>
             <tbody>
-{1}
+{2}
             </tbody>
           </table>
         </div>

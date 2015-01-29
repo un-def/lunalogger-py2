@@ -182,7 +182,7 @@ class LoggerApp(object):
 
             top_users.append(template.users_row.format(position, u'/users/' + quote_plus(top_user[0].encode('utf-8')), cgi.escape(top_user[0]), top_user[1], top_user[1]/total_messages))
         self.navbar = (self.__class__.default_navbar, 'users')
-        self.response.append(template.users.format(total_users, u''.join(top_users)))
+        self.response.append(template.users.format(total_users, total_messages, u''.join(top_users)))
 
     @Path.add('/users/{nick}')
     def user_info(self, nick):
