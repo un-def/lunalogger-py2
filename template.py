@@ -119,6 +119,7 @@ main = u'''    <div class="container">
           <p>Настоящий highload — крутится на коробочке с SoC Atheros AR9344 (MIPS 74Kc @ 560 MHz) и 128 MiB RAM.</p>
         </div>
       </div>
+      <p class="text-center small">GitHub: <a href="https://github.com/un-def/lunalogger-py2" class="badge">py2</a> <a href="https://github.com/un-def/lunalogger" class="badge">py3</a></p>
     </div>
 '''
 
