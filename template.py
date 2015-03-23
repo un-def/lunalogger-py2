@@ -23,15 +23,21 @@ def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js
             <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
             <h4 class="modal-title text-center" id="log-modal-header">Ссылка на это сообщение:</h4>
           </div>
-          <div class="modal-body text-center" id="log-modal-body">
+          <div class="modal-body text-center">
+            <a id="log-modal-link" href="#"></a>
           </div>
         </div>
       </div>
     </div>
     <script>
       $(window).on("load", function () {
+        $("#log-modal-link").on("click", function() {
+          $("#log-modal").modal("hide");
+        });
         $(".panel-body").on("click", ".log-linenumber", function() {
-          $("#log-modal-body").text($(location).attr("href").split("#", 1)[0] + "##" + $(this).attr("id"));
+          var message_link = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname') + "##" + $(this).attr("id");
+          $("#log-modal-link").attr("href", message_link);
+          $("#log-modal-link").text(decodeURIComponent(message_link));
           $("#log-modal").modal("show");
         });
       });
