@@ -254,7 +254,7 @@ class LoggerApp(object):
     def user_log_redirect(self, nick):
         user = self.check_user(nick)
         if user:
-            self.redirect('/users/{0}/log/{1:%Y/%m/%d}/'.format(quote(nick.encode('utf-8')), datetime.date.today()))
+            self.redirect('/users/{0}/log/{1:%Y/%m/%d}/'.format(quote(nick), datetime.date.today()))
 
     @Path.add('/users/{nick}/log/{year:d:4}/{month:d:2}/{day:d:2}')
     def user_log(self, nick, year, month, day):
