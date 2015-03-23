@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 head = u'''<!DOCTYPE html>
 <html lang="ru">
@@ -215,8 +214,21 @@ users_user_info_lst = u'''          Последнее сообщение:
 
 
 ####################
-# /users/{user}/{date}
-users_user_log_title = u'Пользователь {0} — лог чата за {1:%d.%m.%Y}'
+# /users/{user}/log/{date}
+users_user_log_title = u'Лог сообщений {0} за {1:%d.%m.%Y}'
+
+users_user_log = u'''    <div id="log-top" class="container">
+      <div class="panel panel-info">
+        <div class="panel-heading">
+          <h3 class="panel-title">Лог сообщений {0} за {1:%d.%m.%Y}</h3>
+        </div>
+        <div class="panel-body">
+{2}
+        </div>
+      </div>
+      <span id="log-bottom"></span>
+    </div>
+'''
 
 
 ####################

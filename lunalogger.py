@@ -141,7 +141,7 @@ class LoggerApp(object):
     def user_not_found(self, nick):
         self.status = '404 Not Found'
         self.title = template.users_user_not_found_title
-        self.navbar = (__class__.default_navbar, 'users')
+        self.navbar = (self.__class__.default_navbar, 'users')
         self.response.append(template.users_user_not_found.format(cgi.escape(nick)))
 
     def check_user(self, nick):
@@ -249,6 +249,30 @@ class LoggerApp(object):
             self.navbar = (self.__class__.default_navbar + user_navbar, 'user')
             user_info = template.users_user_info.format(cgi.escape(nick), message_count, messages)
             self.response.append(user_info)
+
+    @Path.add('/users/{nick}/log')
+    def user_log_redirect(self, nick):
+        user = self.check_user(nick)
+        if user:
+            self.redirect('/users/{0}/log/{1:%Y/%m/%d}/'.format(quote(nick.encode('utf-8')), datetime.date.today()))
+
+    @Path.add('/users/{nick}/log/{year:d:4}/{month:d:2}/{day:d:2}')
+    def user_log(self, nick, year, month, day):
+        user = self.check_user(nick)
+        if user:
+            log_date = self.make_datetime(year, month, day)
+            if not log_date:
+                self.error_404()
+                return
+            user_id, nick, message_count = user
+            self.title = template.users_user_log_title.format(nick, log_date)
+            self.linkify = u'.log-message'
+            self.js_for_logpage = True
+            log_navbar = self.make_log_navbar(log_date, '/users/'+quote(nick.encode('utf-8'))+'/log/{:%Y/%m/%d}/')
+            user_navbar = (('user', '/users/{}/'.format(quote(nick.encode('utf-8'))), cgi.escape(nick)),)
+            self.navbar = (self.__class__.default_navbar + user_navbar, 'user', log_navbar)
+            user_log = self.make_log(log_date, nick, user_id)
+            self.response.append(template.users_user_log.format(nick, log_date, user_log))
 
     @Path.add('/api')
     def api(self):
