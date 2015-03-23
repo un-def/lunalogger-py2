@@ -4,7 +4,7 @@ from __future__ import division
 import re
 import datetime
 import time
-from urllib import quote_plus
+from urllib import quote
 from urlparse import parse_qs
 import cgi
 import pymysql
@@ -85,7 +85,7 @@ class LoggerApp(object):
         make_content = Path.check(path)
         if make_content:
             if settings.append_slash and not path.endswith('/'):
-                self.redirect(path + '/', perm=True)
+                self.redirect(quote(path, safe='/') + '/', perm=True)
             else:
                 make_content[0](self, **make_content[1])
                 if self.conn:
@@ -138,7 +138,25 @@ class LoggerApp(object):
         else:
             return False
 
-    def make_log(self, log_from, log_to, nick=None, user_id=None):
+    def user_not_found(self, nick):
+        self.status = '404 Not Found'
+        self.title = template.users_user_not_found_title
+        self.navbar = (__class__.default_navbar, 'users')
+        self.response.append(template.users_user_not_found.format(cgi.escape(nick)))
+
+    def check_user(self, nick):
+        ''' shortcut function:
+            user found: return user's info tuple
+            user not found: return False and create user_not_found response
+        '''
+        user = self.get_user(nick)
+        if not user:
+            self.user_not_found(nick)
+        return user
+
+    def make_log(self, log_date, nick=None, user_id=None):
+        log_from = int(time.mktime(log_date.timetuple()))
+        log_to = log_from + 86399
         if nick:
             query, params = u'SELECT `time`, `message`, `me` FROM `chat` WHERE `user`=%s AND `time` BETWEEN %s AND %s ORDER BY `message_id` ASC;', (user_id, log_from, log_to)
         else:
@@ -147,9 +165,18 @@ class LoggerApp(object):
         log = []
         for numb, message_tuple in enumerate(self.cur.fetchall(), 1):   # message_tuple = (time, message, me[, nick])
             current_nick = nick if nick else message_tuple[3]
-            nick_formatted = (template.log_nick_me if message_tuple[2] else template.log_nick_normal).format(u'/users/{}/'.format(quote_plus(current_nick.encode('utf-8'))), cgi.escape(current_nick))
+            nick_formatted = (template.log_nick_me if message_tuple[2] else template.log_nick_normal).format(u'/users/{}/'.format(quote(current_nick.encode('utf-8'))), cgi.escape(current_nick))
             log.append(template.log_line.format(numb, datetime.datetime.fromtimestamp(message_tuple[0]), nick_formatted, cgi.escape(message_tuple[1])))
         return u''.join(log)
+
+    def make_log_navbar(self, log_date, link_format):
+        prev_day = log_date - datetime.timedelta(days=1)
+        next_day = log_date + datetime.timedelta(days=1)
+        return (    (u'##log-bottom', template.nav_down),
+                    (u'##log-top', template.nav_up),
+                    (link_format.format(prev_day), template.nav_left),
+                    (link_format.format(next_day), template.nav_right)
+        )
 
     def make_datetime(self, year, month, day):
         try:
@@ -177,13 +204,9 @@ class LoggerApp(object):
         self.linkify = u'.log-message'
         self.js_for_logpage = True
         self.db_connect()
-        log_from = int(time.mktime(log_date.timetuple()))
-        log_to = log_from + 86399
-        prev_day = log_date - datetime.timedelta(days=1)
-        next_day = log_date + datetime.timedelta(days=1)
-        log_navbar = ((u'##log-bottom', template.nav_down), (u'##log-top', template.nav_up), (u'/log/{:%Y/%m/%d/}'.format(prev_day), template.nav_left), ('/log/{:%Y/%m/%d/}'.format(next_day), template.nav_right))
+        log_navbar = self.make_log_navbar(log_date, '/log/{:%Y/%m/%d}/')
         self.navbar = (self.__class__.default_navbar, 'log', log_navbar)
-        log = self.make_log(log_from, log_to)
+        log = self.make_log(log_date)
         self.response.append(template.log.format(log_date, log))
 
     @Path.add('/users')
@@ -197,19 +220,17 @@ class LoggerApp(object):
         self.cur.execute(u'SELECT `nick`, `message_count` FROM `users` ORDER BY `message_count` DESC LIMIT 100;');
         top_users = []
         for position, top_user in enumerate(self.cur.fetchall(), 1):
-            top_users.append(template.users_row.format(position, u'/users/{}/'.format(quote_plus(top_user[0].encode('utf-8'))), cgi.escape(top_user[0]), top_user[1], top_user[1]/total_messages))
+            top_users.append(template.users_row.format(position, u'/users/{}/'.format(quote(top_user[0].encode('utf-8'))), cgi.escape(top_user[0]), top_user[1], top_user[1]/total_messages))
         self.navbar = (self.__class__.default_navbar, 'users')
         self.response.append(template.users.format(total_users, total_messages, u''.join(top_users)))
 
     @Path.add('/users/{nick}')
     def user_info(self, nick):
-        self.db_connect()
-        user = self.get_user(nick)
+        user = self.check_user(nick)
         if user:
             user_id, nick, message_count = user
             self.title = template.users_user_title.format(cgi.escape(nick))
             self.linkify = u'.bg-info'
-            navbar_user = (('user', '/users/{}/'.format(quote_plus(nick.encode('utf-8'))), cgi.escape(nick)),)
             self.cur.execute(u'SELECT @first := MIN(`message_id`), @last := MAX(`message_id`) FROM `chat` WHERE `user`=%s;', user_id)
             self.cur.execute(u'SELECT `time`, `message` FROM `chat` WHERE `message_id`=@first or `message_id`=@last;')
             result = self.cur.fetchone()
@@ -224,13 +245,10 @@ class LoggerApp(object):
                 messages = template.users_user_info_fst + fst_message + template.users_user_info_lst + lst_message
             else:
                 messages = fst_message
+            user_navbar = (('user', '/users/{}/'.format(quote(nick.encode('utf-8'))), cgi.escape(nick)),)
+            self.navbar = (self.__class__.default_navbar + user_navbar, 'user')
             user_info = template.users_user_info.format(cgi.escape(nick), message_count, messages)
-            self.navbar = (self.__class__.default_navbar + navbar_user, 'user')
             self.response.append(user_info)
-        else:
-            self.title = template.users_user_not_found_title
-            self.navbar = (self.__class__.default_navbar, 'users')
-            self.response.append(template.users_user_not_found.format(cgi.escape(nick)))
 
     @Path.add('/api')
     def api(self):
