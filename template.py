@@ -16,6 +16,7 @@ def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js
     foot = u'''    <script src="/static/js/jquery-1.11.1.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
 '''
+    if js_for_logpage or linkify: foot += u'    <script src="/static/js/custom.js"></script>\n'
     if js_for_logpage: foot += u'''    <div class="modal fade" id="log-modal" tabindex="-1" role="dialog" aria-labelledby="log-modal-header" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -31,15 +32,8 @@ def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js
     </div>
     <script>
       $(window).on("load", function () {
-        $("#log-modal-link").on("click", function() {
-          $("#log-modal").modal("hide");
-        });
-        $(".panel-body").on("click", ".log-linenumber", function() {
-          var message_link = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname') + "##" + $(this).attr("id");
-          $("#log-modal-link").attr("href", message_link);
-          $("#log-modal-link").text(decodeURIComponent(message_link));
-          $("#log-modal").modal("show");
-        });
+        $("#log-modal-link").on("click", function() {$("#log-modal").modal("hide");});
+        $(".panel-body").on("click", ".log-li", showMsgLink);
       });
     </script>
     <script src="/static/js/jquery.arbitrary-anchor.js"></script>
@@ -47,19 +41,13 @@ def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js
       AA_CONFIG = {
         animationLength:  500,
         easingFunction:   "linear",
-        scrollOffset:     55
+        scrollOffset:     53
       };
     </script>
 '''
     if linkify: foot += u'''    <script src="/static/js/jquery.linkify.min.js"></script>
-    <script src="/static/js/custom.js"></script>
     <script>
-      $(window).on("load", function () {{
-        $("{0}").each(function () {{
-          $(this).html(magnetify($(this).html()));
-        }});
-        $("{0}").linkify();
-      }});
+      $(window).on("load", {{selector: "{0}"}}, makeLinks);
     </script>
 '''.format(linkify)
     foot += u'''  </body>
@@ -139,14 +127,16 @@ log = u'''    <div id="log-top" class="container">
           <h3 class="panel-title">Лог чата за {0:%d.%m.%Y}</h3>
         </div>
         <div class="panel-body">
+          <ol class="log-ol">
 {1}
+          </ol>
         </div>
       </div>
       <span id="log-bottom"></span>
     </div>
 '''
 
-log_line = u'''          <span id="{0}" class="log-linenumber text-muted">{0:4d}</span> <span class="log-time text-muted">[{1:%H:%M:%S}]</span> {2} <span class="log-message">{3}</span><br>
+log_line = u'''            <li id="{0}" class="log-li"><span class="log-time text-muted">[{1:%H:%M:%S}]</span> {2} <span class="log-message">{3}</span></li>
 '''
 
 log_nick_normal = u'&lt;<strong><a href="{0}">{1}</a></strong>&gt;'
@@ -229,7 +219,9 @@ users_user_log = u'''    <div id="log-top" class="container">
           <h3 class="panel-title">Лог сообщений {0} за {1:%d.%m.%Y}</h3>
         </div>
         <div class="panel-body">
+          <ol class="log-ol">
 {2}
+          </ol>
         </div>
       </div>
       <span id="log-bottom"></span>

@@ -30,7 +30,7 @@
     $bodhtml  = $body.add( $html );  
 
     // Scroll to the anchor on initial page load.
-    scrollToHash();
+    setTimeout(scrollToHash, 100);  // dirty hack -- un.def
 
     // Select all anchors that have an href 
     // that contains `#`.

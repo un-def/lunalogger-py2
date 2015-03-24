@@ -8,20 +8,36 @@ body {
   padding: 3px;
 }
 
-.log-linenumber {
-  font-family: monospace;
-  white-space: pre-wrap;
-  cursor: pointer;
-}
-
-.log-linenumber:hover {
-  color: #333;
-}
-
 .log-time {
   font-family: monospace;
 }
 
 .log-message {
   white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.log-ol {
+  counter-reset: li; /* Инициализируем счетчик */
+  padding: 0; /* Удаляем  установленное по умолчанию левое поле*/
+  list-style: none; /* Отменяем нумерацию установленную по умолчанию */
+}
+
+.log-li {
+  position: relative; /* Создаем контекст для позиционирования элементов */
+  margin-left: 35px; /* Даем каждому элементу списка отступ слева, что бы освободить пространство для нумерации */
+}
+
+.log-li:before {
+  content: counter(li); /* В качестве данных используем счетчик */
+  counter-increment: li; /* Увеличиваем значение счетчика на 1 */
+  position: absolute;
+  left: -45px;
+  width: 40px;
+  margin-top: 2px;
+  color: #999;
+  font-family: monospace;
+  font-size: 12px;
+  text-align: right;
+  cursor: pointer;
 }

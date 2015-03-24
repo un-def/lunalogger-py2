@@ -7,3 +7,19 @@ function makeMagnetLink(_, magnet, xl, dn) {
   var filesize = (xl / Math.pow(1024, i)).toFixed(2) * 1 + " " + ["байт", "кБ", "МБ", "ГБ", "ТБ"][i];
   return "<a href=\"" + magnet + "\">" + decodeURIComponent(dn.replace(/\+/g, "%20")) + " (" + filesize + ")</a>"
 }
+
+function makeLinks(event) {
+  $(event.data.selector).each(function () {
+    $(this).html(magnetify($(this).html()));
+  });
+  $(event.data.selector).linkify();
+}
+
+function showMsgLink(event) {
+  if (event.pageX < this.offsetLeft) {
+    var link = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname') + "##" + $(this).attr("id");
+    $("#log-modal-link").attr("href", link);
+    $("#log-modal-link").text(decodeURIComponent(link));
+    $("#log-modal").modal("show");
+  }
+}
