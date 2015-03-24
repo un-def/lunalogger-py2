@@ -142,6 +142,8 @@ class LoggerApp(object):
         self.status = '404 Not Found'
         self.title = template.users_user_not_found_title
         self.navbar = (self.__class__.default_navbar, 'users')
+        if isinstance(nick, str):
+            nick = nick.decode('utf-8')
         self.response.append(template.users_user_not_found.format(cgi.escape(nick)))
 
     def check_user(self, nick):
