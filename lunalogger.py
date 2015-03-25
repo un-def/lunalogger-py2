@@ -127,7 +127,24 @@ class LoggerApp(object):
     def redirect(self, url, perm=False):
         self.status = '301 Moved Permanently' if perm else '302 Found'
         self.plain = True
+        if url.startswith('/'):
+            url = self.make_abs_url(url)
         self.headers.append(('Location', url))
+
+    def make_abs_url(self, rel_url):
+        url = self.environ['wsgi.url_scheme'] + '://'
+        if self.environ.get('HTTP_HOST'):
+            url += self.environ['HTTP_HOST']
+        else:
+            url += self.environ['SERVER_NAME']
+            if self.environ['wsgi.url_scheme'] == 'https':
+                if self.environ['SERVER_PORT'] != '443':
+                    url += ':' + self.environ['SERVER_PORT']
+            else:
+                if self.environ['SERVER_PORT'] != '80':
+                    url += ':' + self.environ['SERVER_PORT']
+        url += rel_url
+        return url
 
     def get_user(self, nick):
         if not self.conn:
