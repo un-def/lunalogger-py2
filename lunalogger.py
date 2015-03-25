@@ -174,8 +174,8 @@ class LoggerApp(object):
     def make_log_navbar(self, log_date, link_format):
         prev_day = log_date - datetime.timedelta(days=1)
         next_day = log_date + datetime.timedelta(days=1)
-        return (    (u'##log-bottom', template.nav_down),
-                    (u'##log-top', template.nav_up),
+        return (    (u'#;log-bottom', template.nav_down),
+                    (u'#;log-top', template.nav_up),
                     (link_format.format(prev_day), template.nav_left),
                     (link_format.format(next_day), template.nav_right)
         )

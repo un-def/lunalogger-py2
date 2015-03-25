@@ -68,6 +68,7 @@
   function scrollToHash(rawHash){
     var rawHash       = rawHash || location.hash;
     var anchorTuple   = rawHash.substring(1)
+                               .replace(/;/g, "#")  // hash sign not allowed in fragments (RFC 3986 section 3.5) -- un.def
                                .split("|");
 
     var hash          = anchorTuple[0];

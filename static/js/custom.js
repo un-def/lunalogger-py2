@@ -17,7 +17,7 @@ function makeLinks(event) {
 
 function showMsgLink(event) {
   if (event.pageX < this.offsetLeft) {
-    var link = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname') + "##" + $(this).attr("id");
+    var link = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname') + "#;" + $(this).attr("id");
     $("#log-modal-link").attr("href", link);
     $("#log-modal-link").text(decodeURIComponent(link));
     $("#log-modal").modal("show");
