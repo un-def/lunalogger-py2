@@ -8,11 +8,12 @@ db = {  #'host': 'localhost',
         'database': 'dc_test',
         'charset': 'utf8'
 }
-append_slash = True # редиректить при отсутствии конечного / на url с /
+append_slash = True   # редиректить при отсутствии конечного / на url с /
 title_sitename = u'lunalogger'
 title_separator = u' :: '
 post_encoding = 'windows-1251'
 post_token = 'verysecrettoken'
+pytz_timezone = 'Europe/Moscow'   # None - не использовать pytz
 
 # middleware
 mw_permcache = {'enabled': True,

@@ -3,13 +3,21 @@
 from __future__ import division
 import re
 import datetime
-import time
 from urllib import quote
 from urlparse import parse_qs
 import cgi
 import pymysql
 import template
 import settings
+if settings.pytz_timezone:
+    import pytz
+    from calendar import timegm
+    log_tz = pytz.timezone(settings.pytz_timezone)
+    dt_to_ts = lambda dt: timegm(dt.utctimetuple())
+else:
+    from time import mktime
+    log_tz = None
+    dt_to_ts = lambda dt: int(mktime(dt.timetuple()))
 
 class Path(object):
 
@@ -174,7 +182,7 @@ class LoggerApp(object):
         return user
 
     def make_log(self, log_date, nick=None, user_id=None):
-        log_from = int(time.mktime(log_date.timetuple()))
+        log_from = dt_to_ts(log_date)
         log_to = log_from + 86399
         if nick:
             query, params = u'SELECT `time`, `message`, `me` FROM `chat` WHERE `user`=%s AND `time` BETWEEN %s AND %s ORDER BY `message_id` ASC;', (user_id, log_from, log_to)
@@ -185,7 +193,7 @@ class LoggerApp(object):
         for numb, message_tuple in enumerate(self.cur.fetchall(), 1):   # message_tuple = (time, message, me[, nick])
             current_nick = nick if nick else message_tuple[3]
             nick_formatted = (template.log_nick_me if message_tuple[2] else template.log_nick_normal).format(u'/users/{}/'.format(quote(current_nick.encode('utf-8'))), cgi.escape(current_nick))
-            log.append(template.log_line.format(numb, datetime.datetime.fromtimestamp(message_tuple[0]), nick_formatted, cgi.escape(message_tuple[1])))
+            log.append(template.log_line.format(numb, datetime.datetime.fromtimestamp(message_tuple[0], tz=log_tz), nick_formatted, cgi.escape(message_tuple[1])))
         return u''.join(log)
 
     def make_log_navbar(self, log_date, link_format):
@@ -199,7 +207,9 @@ class LoggerApp(object):
 
     def make_datetime(self, year, month, day):
         try:
-            return datetime.datetime(int(year), int(month), int(day))
+            dt = datetime.datetime(int(year), int(month), int(day))
+            if log_tz: dt = log_tz.localize(dt)
+            return dt
         except ValueError:
             return False
 
@@ -211,7 +221,7 @@ class LoggerApp(object):
 
     @Path.add('/log')
     def log_redirect(self):
-        self.redirect(datetime.date.today().strftime('/log/%Y/%m/%d/'))
+        self.redirect(datetime.datetime.now(tz=log_tz).strftime('/log/%Y/%m/%d/'))
 
     @Path.add('/log/{year:d:4}/{month:d:2}/{day:d:2}')
     def log(self, year, month, day):
@@ -253,12 +263,12 @@ class LoggerApp(object):
             self.cur.execute(u'SELECT @first := MIN(`message_id`), @last := MAX(`message_id`) FROM `chat` WHERE `user`=%s;', user_id)
             self.cur.execute(u'SELECT `time`, `message` FROM `chat` WHERE `message_id`=@first or `message_id`=@last;')
             result = self.cur.fetchone()
-            fst_time = datetime.datetime.fromtimestamp(result[0])
+            fst_time = datetime.datetime.fromtimestamp(result[0], tz=log_tz)
             fst_text = result[1]
             fst_message = template.users_user_info_message.format(u'/log/{0:%Y/%m/%d/}'.format(fst_time), fst_time, fst_text)
             if message_count > 1:
                 result = self.cur.fetchone()
-                lst_time = datetime.datetime.fromtimestamp(result[0])
+                lst_time = datetime.datetime.fromtimestamp(result[0], tz=log_tz)
                 lst_text = result[1]
                 lst_message = template.users_user_info_message.format(u'/log/{0:%Y/%m/%d/}'.format(lst_time), lst_time, lst_text)
                 messages = template.users_user_info_fst + fst_message + template.users_user_info_lst + lst_message
@@ -273,7 +283,7 @@ class LoggerApp(object):
     def user_log_redirect(self, nick):
         user = self.check_user(nick)
         if user:
-            self.redirect('/users/{0}/log/{1:%Y/%m/%d}/'.format(quote(nick), datetime.date.today()))
+            self.redirect('/users/{0}/log/{1:%Y/%m/%d}/'.format(quote(nick), datetime.datetime.now(tz=log_tz)))
 
     @Path.add('/users/{nick}/log/{year:d:4}/{month:d:2}/{day:d:2}')
     def user_log(self, nick, year, month, day):
