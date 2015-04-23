@@ -4,9 +4,14 @@ import os
 import re
 import gzip
 import StringIO
-import datetime as dt
+import datetime
 from urllib import quote
 import settings
+if settings.pytz_timezone:
+    import pytz
+    log_tz = pytz.timezone(settings.pytz_timezone)
+else:
+    log_tz = None
 
 class PermCache(object):
 
@@ -23,11 +28,12 @@ class PermCache(object):
         is_log = self.path_regex.search(environ['PATH_INFO'])
         if is_log:
             try:
-                log_date = dt.datetime.strptime(is_log.group(1), '%Y/%m/%d').date()
+                log_date = datetime.datetime.strptime(is_log.group(1), '%Y/%m/%d').date()
             except ValueError:
                 return self.as_is()
             # не кэшируем будущее, сегодняшний день и вчерашний, если сейчас меньше 01:00
-            if log_date >= dt.date.today() or log_date == dt.date.today()-dt.timedelta(days=1) and dt.datetime.today().hour < 1:
+            now = datetime.datetime.now(tz=log_tz)
+            if log_date >= now.date() or log_date == now.date()-datetime.timedelta(days=1) and now.hour < 1:
                 return self.as_is()
             path_split = [quote(el, safe='') for el in environ['PATH_INFO'].strip('/').split('/')]
             cache_dir = os.path.join(settings.mw_permcache['cache_dir'], *path_split[:-1])
@@ -42,7 +48,7 @@ class PermCache(object):
                 if hasattr(content_iter, 'close'):
                     content_iter.close()
                 if self.status_ok:   # не кэшируем редиректы и 404
-                    content.append('<!-- сached at {0:%d.%m.%Y %H:%M:%S} -->\n'.format(dt.datetime.today()))
+                    content.append('<!-- сached at {0:%d.%m.%Y %H:%M:%S} -->\n'.format(now))
                     if not os.path.isdir(cache_dir):
                         os.makedirs(cache_dir)
                     buf = StringIO.StringIO()
