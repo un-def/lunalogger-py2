@@ -1,5 +1,5 @@
 function magnetify(message) {
-  return message.replace(/(magnet:\?xt=urn:tree:tiger:[A-Z0-9]{39}&amp;xl=(\d+)&amp;dn=([^\s]+))/gm, makeMagnetLink)
+  return message.replace(/(magnet:\?xt=urn:tree:tiger:[A-Za-z0-9]{39}&amp;xl=(\d+)&amp;dn=([^\s]+))/gm, makeMagnetLink)
 }
 
 function makeMagnetLink(_, magnet, xl, dn) {
