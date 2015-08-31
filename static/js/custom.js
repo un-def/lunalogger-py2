@@ -8,11 +8,11 @@ function makeMagnetLink(_, magnet, xl, dn) {
   return "<a href=\"" + magnet + "\">" + decodeURIComponent(dn.replace(/\+/g, "%20")) + " (" + filesize + ")</a>"
 }
 
-function makeLinks(event) {
-  $(event.data.selector).each(function () {
+function makeLinks() {
+  $(".linkify").each(function () {
     $(this).html(magnetify($(this).html()));
   });
-  $(event.data.selector).linkify();
+  $(".linkify").linkify();
 }
 
 function showMsgLink(event) {

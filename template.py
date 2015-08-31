@@ -12,7 +12,7 @@ head = u'''<!DOCTYPE html>
   <body>
 '''
 
-def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js_for_logpage=True - одключает jquery-штуки для страницы лога (плавная прокрутка, модальные окна)
+def make_foot(linkify=False, js_for_logpage=False):
     foot = u'''    <script src="/static/js/jquery-1.11.1.min.js"></script>
     <script src="/static/js/bootstrap.min.js"></script>
 '''
@@ -47,9 +47,9 @@ def make_foot(linkify, js_for_logpage=False):   # linkify - селектор; js
 '''
     if linkify: foot += u'''    <script src="/static/js/jquery.linkify.min.js"></script>
     <script>
-      $(window).on("load", {{selector: "{0}"}}, makeLinks);
+      $(window).on("load", makeLinks);
     </script>
-'''.format(linkify)
+'''
     foot += u'''  </body>
 </html>
 '''
@@ -136,7 +136,7 @@ log = u'''    <div id="log-top" class="container">
     </div>
 '''
 
-log_line = u'''            <li id="{0}" class="log-li"><span class="log-time text-muted">[{1:%H:%M:%S}]</span> {2} <span class="log-message">{3}</span></li>
+log_line = u'''            <li id="{0}" class="log-li"><span class="log-time text-muted">[{1:%H:%M:%S}]</span> {2} <span class="log-message linkify">{3}</span></li>
 '''
 
 log_nick_normal = u'&lt;<strong><a href="{0}">{1}</a></strong>&gt;'
@@ -197,7 +197,7 @@ users_user_info = u'''    <div class="container">
     </div>
 '''
 
-users_user_info_message = u'''          <p class="bg-info">
+users_user_info_message = u'''          <p class="bg-info linkify">
             <a href="{0}">{1:%d.%m.%Y %H:%M:%S}</a> {2}
           </p>
 '''
